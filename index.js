@@ -13,7 +13,6 @@ otapa.request().then(result => {
 })
 
 koikoi.request().then(result => {
-  console.log(result)
   // result.forEach(i => console.log(JSON.stringify(i)))
   fs.writeFileSync('koikoi.json', JSON.stringify(result))
 }).catch(e => {
