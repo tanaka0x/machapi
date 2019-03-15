@@ -1,82 +1,24 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, text, div, h1, img, a)
-import Html.Attributes exposing (src, class, href)
+import Html exposing (Html, text, div, h1, img, a, input)
+import Html.Attributes exposing (src, class, href, id, value)
+import Html.Events exposing (onInput)
 import Http
 import Json.Decode as Decode
+import Events exposing (Event, EventDate, eventDecoder, eventDateDecoder, dateToString, compareDate)
+import Dict
+
 
 ---- MODEL ----
 
 
 type alias Model =
-    { events: List Event
-    , error: Maybe Http.Error
+    { events : List (String, List Event)
+    , query : String
+    , error : Maybe Http.Error
     }
 
-
-type alias EventDate =
-    { y: Int
-    , m: Int
-    , d: Int
-    , original: String
-    }
-
-toString : EventDate -> String
-toString evd =
-    String.join "/" (List.map String.fromInt [evd.y, evd.m, evd.d])
-
-compare : Maybe EventDate -> Maybe EventDate -> Order
-compare lhs rhs =
-    case (lhs, rhs) of
-        (Just l, Just r) ->
-            case l.y == r.y of
-                True -> 
-                    case l.m == r.m of
-                        True ->
-                            case l.d == r.d of
-                                True -> EQ
-                                _ -> 
-                                    if l.d < r.d
-                                        then LT
-                                        else GT
-                        _ ->
-                            if l.m < r.m
-                                then LT
-                                else GT
-                _ -> 
-                    if l.y < r.y 
-                        then LT
-                        else GT
-        (Nothing, Just r) ->
-            GT
-        (Just l, Nothing) ->
-            LT
-        _ ->
-            EQ
-
-
-eventDateDecoder =
-    Decode.map4 EventDate
-        (Decode.field "y" Decode.int)
-        (Decode.field "m" Decode.int)
-        (Decode.field "d" Decode.int)
-        (Decode.field "original" Decode.string)
-
-
-type alias Event =
-    { site : String
-    , title : String
-    , href : String
-    , date : Maybe EventDate
-    }
-
-eventDecoder =
-    Decode.map4 Event
-        (Decode.field "site" Decode.string)
-        (Decode.field "title" Decode.string)
-        (Decode.field "href" Decode.string)
-        (Decode.field "date" (Decode.nullable eventDateDecoder))
 
 requestEvents : Cmd Msg
 requestEvents = 
@@ -87,7 +29,12 @@ requestEvents =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { events = [], error = Nothing }, requestEvents )
+    ( { events = []
+    , error = Nothing 
+    , query = ""
+    }
+    , requestEvents 
+    )
 
 
 
@@ -97,6 +44,7 @@ init =
 type Msg
     = NoOp
     | ReceiveEvents (Result Http.Error (List Event))
+    | SetQuery String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -105,9 +53,13 @@ update msg model =
         ReceiveEvents res ->
             case res of
                 Ok events ->
-                    ( { model | events = List.sortWith (\l r -> compare l.date r.date) events }, Cmd.none )
+                    ( { model | events = Events.byDate events |> Dict.toList }, Cmd.none )
                 Err e ->
                     ( { model | error = Just e }, Cmd.none )
+        
+        SetQuery newQuery ->
+            ( { model | query = newQuery }, Cmd.none )
+        
         _ -> ( model, Cmd.none )
 
 
@@ -118,26 +70,49 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ img [ src "/logo.svg" ] []
-        , h1 [] [ text "Your Elm App is working!" ]
-        , div [ class "events" ] 
-            (List.map renderEvent model.events)
+        [ h1 [] [ text "近日のイベント一覧" ]
+        , div [ class "query" ]
+            [ input [ onInput SetQuery, value model.query ] [] ]
+        , renderEvents model.query model.events
         ]
 
 
-defaultString : Maybe EventDate -> String
-defaultString v =
+defaultString : (a -> String) -> Maybe a -> String
+defaultString toString v =
     case v of
         Nothing -> ""
         Just item -> toString item
 
-renderEvent : Event -> Html msg
-renderEvent ev =
+
+filterEvents : String -> List Event -> List Event
+filterEvents query events = 
+    if String.isEmpty query
+        then events
+        else List.filter (\ev -> String.contains query ev.title) events
+
+
+renderEvents : String -> List (String, List Event) -> Html msg
+renderEvents query dateEvents =
+    div [ class "events" ] 
+        <| List.map 
+            (\(date, events) -> renderByDate query date events)
+            dateEvents
+
+
+renderByDate : String -> String -> List Event -> Html msg
+renderByDate query date events =
+    div [ class "at", id date ]
+        <| [ div [ class "date" ] [ text date] ] ++ 
+            List.map (renderEvent date) (filterEvents query events)
+
+
+renderEvent : String -> Event -> Html msg
+renderEvent date ev =
     div [ class "event" ]
         [ div [ class "title" ]
             [ a [ href ev.href ] [ text ev.title ] ]
         , div [ class "detail" ]
-            [ text <| defaultString ev.date ]
+            []
         ]
 
 ---- PROGRAM ----
