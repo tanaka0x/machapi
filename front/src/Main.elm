@@ -69,12 +69,21 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ h1 [] [ text "近日のイベント一覧" ]
-        , div [ class "query" ]
-            [ input [ onInput SetQuery, value model.query ] [] ]
-        , renderEvents model.query model.events
-        ]
+    let 
+        filtered = 
+            List.map (\(date, events) -> (date, filterEvents model.query events)) model.events
+            |> List.filter (\(date, events) -> not <| List.isEmpty events)
+    in 
+        div []
+            [ h1 [] [ text "近日のイベント一覧" ]
+            , div [ class "query" ]
+                [ input [ onInput SetQuery, value model.query ] [] ]
+            , if List.isEmpty filtered
+                then
+                    div [ class "empty-events"] [ text "イベントが見つかりませんでした" ]
+                else
+                    renderEvents filtered
+            ]
 
 
 defaultString : (a -> String) -> Maybe a -> String
@@ -91,19 +100,19 @@ filterEvents query events =
         else List.filter (\ev -> String.contains query ev.title) events
 
 
-renderEvents : String -> List (String, List Event) -> Html msg
-renderEvents query dateEvents =
+renderEvents : List (String, List Event) -> Html msg
+renderEvents dateEvents =
     div [ class "events" ] 
         <| List.map 
-            (\(date, events) -> renderByDate query date events)
+            (\(date, events) -> renderByDate date events)
             dateEvents
 
 
-renderByDate : String -> String -> List Event -> Html msg
-renderByDate query date events =
+renderByDate : String -> List Event -> Html msg
+renderByDate date events =
     div [ class "at", id date ]
         <| [ div [ class "date" ] [ text date] ] ++ 
-            List.map (renderEvent date) (filterEvents query events)
+            List.map (renderEvent date) events
 
 
 renderEvent : String -> Event -> Html msg
