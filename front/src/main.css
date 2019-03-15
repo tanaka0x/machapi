@@ -14,7 +14,12 @@ img {
   max-width: 200px;
 }
 
-div.events, div.empty-events, div.query {
+div.top {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+div.events, div.empty-events, div.query, div.top {
   text-align: start;
   padding: 0 .75rem;
 }

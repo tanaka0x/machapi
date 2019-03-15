@@ -75,10 +75,9 @@ view model =
             |> List.filter (\(date, events) -> not <| List.isEmpty events)
     in 
         div []
-            [ div [ class "navbar" ] 
-                [ div [ class "navbar-brand" ] [ span [ class "navbar-item" ] [ text "近日のイベント一覧" ]]]
-            , div [ class "" ]
-                [ div [ class "query container"] 
+            [ div [ class "" ]
+                [ div [ class "top container" ] [ h1 [] [ text "近日のイベント一覧" ] ]
+                , div [ class "query container"] 
                     [ div [ class "field" ] 
                         [ label [ class "label" ] [ text "検索" ]
                         , div [ class "control" ]
