@@ -13,3 +13,16 @@ img {
   margin: 20px 0;
   max-width: 200px;
 }
+
+div.events, div.empty-events, div.query {
+  text-align: start;
+  padding: 0 .75rem;
+}
+
+div.events > .at {
+  margin-top: 1.5rem;
+}
+
+div.events > .at > .event {
+  margin-bottom: .2rem;
+}

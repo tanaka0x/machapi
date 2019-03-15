@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Browser
-import Html exposing (Html, text, div, h1, img, a, input)
+import Html exposing (Html, text, div, h1, img, a, input, span, label)
 import Html.Attributes exposing (src, class, href, id, value)
 import Html.Events exposing (onInput)
 import Http
@@ -75,14 +75,22 @@ view model =
             |> List.filter (\(date, events) -> not <| List.isEmpty events)
     in 
         div []
-            [ h1 [] [ text "近日のイベント一覧" ]
-            , div [ class "query" ]
-                [ input [ onInput SetQuery, value model.query ] [] ]
-            , if List.isEmpty filtered
-                then
-                    div [ class "empty-events"] [ text "イベントが見つかりませんでした" ]
-                else
-                    renderEvents filtered
+            [ div [ class "navbar" ] 
+                [ div [ class "navbar-brand" ] [ span [ class "navbar-item" ] [ text "近日のイベント一覧" ]]]
+            , div [ class "" ]
+                [ div [ class "query container"] 
+                    [ div [ class "field" ] 
+                        [ label [ class "label" ] [ text "検索" ]
+                        , div [ class "control" ]
+                            [ input [ class "input", onInput SetQuery, value model.query ] [] ]
+                        ]
+                    ]
+                , if List.isEmpty filtered
+                    then
+                        div [ class "empty-events container"] [ text "イベントが見つかりませんでした" ]
+                    else
+                        renderEvents filtered
+                ]
             ]
 
 
@@ -102,7 +110,7 @@ filterEvents query events =
 
 renderEvents : List (String, List Event) -> Html msg
 renderEvents dateEvents =
-    div [ class "events" ] 
+    div [ class "events container" ] 
         <| List.map 
             (\(date, events) -> renderByDate date events)
             dateEvents
@@ -118,7 +126,7 @@ renderByDate date events =
 renderEvent : String -> Event -> Html msg
 renderEvent date ev =
     div [ class "event" ]
-        [ div [ class "title" ]
+        [ div [ class "name" ]
             [ a [ href ev.href ] [ text ev.title ] ]
         , div [ class "detail" ]
             []
