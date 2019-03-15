@@ -7,6 +7,7 @@ const port = process.env.API_PORT ? parseInt(process.env.API_PORT) : 8080
 
 const app = express()
 app.use(compression())
+app.use(express.static('front/build'))
 
 app.listen(port)
 
