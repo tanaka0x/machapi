@@ -75,7 +75,7 @@ type alias EventsByDate =
     List (String, List Event)
 
 
-emptyDictByDate : Dict.Dict String (List Event)
+emptyDictByDate : Dict.Dict (Int, Int, Int) (List Event)
 emptyDictByDate = Dict.empty
     
 
@@ -86,19 +86,19 @@ updateDict ev ml =
         Nothing -> Just [ev]
 
 
-toKey : Event -> String
+toKey : Event -> (Int, Int, Int)
 toKey ev =
     case ev.date of
-        Just d -> dateToString d
-        Nothing -> "Unknown"
+        Just d -> (d.y, d.m, d.d)
+        Nothing -> (0, 0, 0)
 
 
-toKV : List Event -> List (String, Event)
+toKV : List Event -> List ((Int, Int, Int), Event)
 toKV events = 
     List.map (\ev -> (toKey ev, ev)) events
 
 
-byDate : List Event -> Dict.Dict String (List Event)
+byDate : List Event -> Dict.Dict (Int, Int, Int) (List Event)
 byDate events =
     let 
         kvl = toKV events

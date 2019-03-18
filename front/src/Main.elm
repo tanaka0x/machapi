@@ -6,7 +6,7 @@ import Html.Attributes exposing (src, class, href, id, value)
 import Html.Events exposing (onInput)
 import Http
 import Json.Decode as Decode
-import Events exposing (Event, EventDate, eventDecoder, eventDateDecoder, dateToString, compareDate)
+import Events exposing (Event, EventDate, eventDecoder, eventDateDecoder, compareDate)
 import Dict
 
 
@@ -14,7 +14,7 @@ import Dict
 
 
 type alias Model =
-    { events : List (String, List Event)
+    { events : List ((Int, Int, Int), List Event)
     , query : String
     , error : Maybe Http.Error
     }
@@ -100,6 +100,13 @@ defaultString toString v =
         Just item -> toString item
 
 
+dateToString : (Int, Int, Int) -> String
+dateToString date =
+    case date of
+        (0, 0, 0) -> "Unknown"
+        (y, m, d) -> Events.dateToString { y = y, m = m, d = d, original = "" }
+
+
 filterEvents : String -> List Event -> List Event
 filterEvents query events = 
     if String.isEmpty query
@@ -107,7 +114,7 @@ filterEvents query events =
         else List.filter (\ev -> String.contains query ev.title) events
 
 
-renderEvents : List (String, List Event) -> Html msg
+renderEvents : List ((Int, Int, Int), List Event) -> Html msg
 renderEvents dateEvents =
     div [ class "events container" ] 
         <| List.map 
@@ -115,14 +122,15 @@ renderEvents dateEvents =
             dateEvents
 
 
-renderByDate : String -> List Event -> Html msg
+renderByDate : (Int, Int, Int) -> List Event -> Html msg
 renderByDate date events =
-    div [ class "at", id date ]
-        <| [ div [ class "date" ] [ text date] ] ++ 
+    let ds = dateToString date
+    in div [ class "at", id ds ]
+        <| [ div [ class "date" ] [ text ds ] ] ++ 
             List.map (renderEvent date) events
 
 
-renderEvent : String -> Event -> Html msg
+renderEvent : (Int, Int, Int) -> Event -> Html msg
 renderEvent date ev =
     div [ class "event" ]
         [ div [ class "name" ]
